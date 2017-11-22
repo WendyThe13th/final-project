@@ -1,7 +1,7 @@
 ---
 title: "Final Project"
-author: "Mengqi Zhu"
-date: "2017年11月22日"
+author: "Mengqi Zhu & Shuang Wu & Yutian Mu & Yuan Dong"
+date: "November 22nd 2017"
 output: html_document
 ---
 
@@ -13,9 +13,20 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```{r}
 library(tidyverse)
 library(readr)
+library(janitor)
 ```
 
 ```{r}
-nyc_bus <- read_csv("./Bus_Breakdown_and_Delays.csv")
+nyc_bus <- 
+  read_csv("./Bus_Breakdown_and_Delays.csv") %>%
+  clean_names()
 ```
+
+
+
+
+
+
+
+
 
