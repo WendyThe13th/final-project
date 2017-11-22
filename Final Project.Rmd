@@ -14,15 +14,34 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(readr)
 library(janitor)
+library(lubridate)
+library(stringr)
+library(chron)
 ```
 
 ```{r}
+#read and clean data
 nyc_bus <- 
   read_csv("./Bus_Breakdown_and_Delays.csv") %>%
-  clean_names()
+  clean_names() %>%
+  filter(!is.na(boro)) #filter NA in boro variable
 ```
 
+```{r}
+#breakdwon vount over time
+nyc_bus %>%
+  separate(occurred_on, into = c("date", "time", "am_pm"), sep = " ") %>%
+  mutate(datetime = format(strptime(str_c(time, am_pm, sep = " "), "%I:%M:%S %p"), "%H:%M:%S")) %>%
+  count(datetime, boro) %>%
+  rename(breakdown_count = n) %>%
+  ggplot(aes(x = datetime, y = breakdown_count, fill = boro, color = boro)) +
+  geom_point() +
+  geom_smooth()
+```
 
+```{r}
+
+```
 
 
 
