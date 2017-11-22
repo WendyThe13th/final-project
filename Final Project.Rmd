@@ -1,0 +1,21 @@
+---
+title: "Final Project"
+author: "Mengqi Zhu"
+date: "2017年11月22日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+
+```{r}
+library(tidyverse)
+library(readr)
+```
+
+```{r}
+nyc_bus <- read_csv("./Bus_Breakdown_and_Delays.csv")
+```
+
