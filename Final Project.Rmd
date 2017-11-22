@@ -23,6 +23,8 @@ library(chron)
 library(forcats)
 ```
 
+
+#Description
 ```{r}
 #read and clean data
 nyc_bus <- 
@@ -60,6 +62,62 @@ nyc_bus %>%
    labs(y = "number of breakdown", title = "Number of Breakdown by boros")
 ```
 
+
+```{r summary_function}
+#Top routes where breakdowns or delays occur
+summary_by_total <- function(data){
+  list(variable = colnames(data),
+       num_obs = rep(nrow(data), ncol(data)),
+       mean = apply(data, 2, mean),
+       sd = apply(data, 2, sd),
+       min = apply(data, 2, min),
+       median = apply(data, 2, median),
+       max = apply(data, 2, max)) %>%
+    as.tibble()
+}
+```
+
+```{r summary_routes_breakdown}
+nyc_bus %>%
+  group_by(route_number) %>%
+  summarize(n_route = n()) %>%
+  select(n_route) %>%
+  summary_by_total()
+```
+There are 11748 routes where breakdowns occur. We choose the most common ones with more than 200 breakdowns and make a barplot.
+
+```{r top_routes_breakdown}
+nyc_bus %>%
+  group_by(route_number) %>%
+  summarize(n_route = n()) %>%
+  filter(n_route > 200) %>% 
+  ungroup() %>%
+  mutate(route_number = fct_reorder(route_number, n_route)) %>%
+  ggplot(aes(x = route_number, y = n_route)) +
+  geom_bar(stat = "identity", fill = "blue", alpha = .6) +
+  coord_flip() +
+  labs(title = "Top routes where breakdowns occur")
+```
+
+
+
+```{r reason_breakdown}
+#Main reasons for school bus breakdowns and delays
+reason_count = nyc_bus %>%
+  group_by(reason) %>%
+  filter(!is.na(reason))%>%
+  summarize(n_reason = n()) %>%
+  ungroup() %>%
+  arrange(n_reason)
+reason_count
+
+reason_count %>%
+  mutate(reason = fct_reorder(reason, n_reason)) %>%
+  ggplot(aes(x = reason, y = n_reason)) +
+  geom_bar(stat = "identity", fill = "blue", alpha = .6) +
+  coord_flip() +
+  labs(title = "Reasons for Breakdown")
+```
 
 
 
