@@ -1,8 +1,11 @@
 ---
 title: "Final Project"
-author: "Mengqi Zhu & Shuang Wu & Yutian Mu & Yuan Dong"
+author: "Mengqi Zhu & Shuang Wu & Yutian Mu & Dong Yuan"
 date: "November 22nd 2017"
-output: html_document
+output: 
+   html_document:
+    toc: true
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
@@ -17,6 +20,7 @@ library(janitor)
 library(lubridate)
 library(stringr)
 library(chron)
+library(forcats)
 ```
 
 ```{r}
@@ -24,7 +28,10 @@ library(chron)
 nyc_bus <- 
   read_csv("./Bus_Breakdown_and_Delays.csv") %>%
   clean_names() %>%
-  filter(!is.na(boro)) #filter NA in boro variable
+  filter(!is.na(boro)) %>%  #filter NA in boro variable
+  mutate(bus_company_name = tolower(bus_company_name),
+         company_name = str_sub(bus_company_name,1,5)) %>%   #find the unique company name
+  select(school_year:bus_company_name,company_name,everything())
 ```
 
 ```{r}
@@ -40,7 +47,17 @@ nyc_bus %>%
 ```
 
 ```{r}
-
+#Number of Breakdown by boros
+nyc_bus %>% 
+  group_by(boro) %>% 
+  count() %>% 
+  ungroup() %>% 
+  mutate(boro = as.factor(boro),
+         boro = fct_reorder(boro,n)) %>% 
+  ggplot(aes(x = boro, y = n, fill = boro)) +
+   geom_bar(stat = "identity",alpha = 0.8) +
+   theme(axis.text.x = element_text(angle = 270)) +
+   labs(y = "number of breakdown", title = "Number of Breakdown by boros")
 ```
 
 
