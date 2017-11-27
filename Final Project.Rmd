@@ -69,7 +69,8 @@ nyc_bus_delay <- rbind(nyc_bus_delay_hour,nyc_bus_delay_min)
 
 nyc_bus <- nyc_bus %>% 
   select(- how_long_delayed) 
-nyc_bus <- merge(nyc_bus,nyc_bus_delay, by.x = "busbreakdown_id", by.y = "busbreakdown_id", all = TRUE) 
+nyc_bus <- merge(nyc_bus,nyc_bus_delay, by.x = "busbreakdown_id", by.y = "busbreakdown_id", all = TRUE) %>%
+  mutate(how_long_delayed = as.numeric(how_long_delayed))
 
 #Company name clean
 nyc_bus <-
