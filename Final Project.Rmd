@@ -124,47 +124,113 @@ summary_by_total <- function(data){
 
 ```{r summary_routes_breakdown}
 nyc_bus %>%
+  filter(breakdown_or_running_late == "Breakdown") %>%
   group_by(route_number) %>%
-  summarize(n_route = n()) %>%
-  select(n_route) %>%
+  summarize(breakdown = n()) %>%
+  select(breakdown) %>%
+  summary_by_total()
+
+nyc_bus %>%
+  filter(breakdown_or_running_late == "Running Late") %>%
+  group_by(route_number) %>%
+  summarize(delay = n()) %>%
+  select(delay) %>%
   summary_by_total()
 ```
 There are 11748 routes where breakdowns occur. We choose the most common ones with more than 200 breakdowns and make a barplot.
 
-```{r top_routes_breakdown}
+```{r top_routes}
+library(forcats)
+
 nyc_bus %>%
+  filter(breakdown_or_running_late == "Breakdown") %>%
   group_by(route_number) %>%
   summarize(n_route = n()) %>%
-  filter(n_route > 200) %>% 
   ungroup() %>%
+  mutate(route_rank=min_rank(desc(n_route))) %>%
+  filter(route_rank <= 10) %>%
   mutate(route_number = fct_reorder(route_number, n_route)) %>%
   ggplot(aes(x = route_number, y = n_route)) +
   geom_bar(stat = "identity", fill = "blue", alpha = .6) +
   coord_flip() +
-  labs(title = "Top routes where breakdowns occur")
+  labs(title = "Top 10 routes where breakdowns occur")
+
+nyc_bus %>%
+  filter(breakdown_or_running_late == "Running Late") %>%
+  group_by(route_number) %>%
+  summarize(n_route = n()) %>%
+  ungroup() %>%
+  mutate(route_rank=min_rank(desc(n_route))) %>%
+  filter(route_rank <= 10) %>%
+  mutate(route_number = fct_reorder(route_number, n_route)) %>%
+  ggplot(aes(x = route_number, y = n_route)) +
+  geom_bar(stat = "identity", fill = "blue", alpha = .6) +
+  coord_flip() +
+  labs(title = "Top 10 routes where delay occur")
 ```
 
 
 
 ```{r reason_breakdown}
-#Main reasons for school bus breakdowns and delays
-reason_count = nyc_bus %>%
+# Main reasons for school bus breakdowns and delays
+reason_count_break = nyc_bus %>%
+  filter(breakdown_or_running_late == "Breakdown") %>%
   group_by(reason) %>%
   filter(!is.na(reason))%>%
   summarize(n_reason = n()) %>%
   ungroup() %>%
   arrange(n_reason)
-reason_count
+reason_count_break
 
-reason_count %>%
+reason_count_break %>%
   mutate(reason = fct_reorder(reason, n_reason)) %>%
   ggplot(aes(x = reason, y = n_reason)) +
   geom_bar(stat = "identity", fill = "blue", alpha = .6) +
   coord_flip() +
   labs(title = "Reasons for Breakdown")
+
+reason_count_delay = nyc_bus %>%
+  filter(breakdown_or_running_late == "Running Late") %>%
+  group_by(reason) %>%
+  filter(!is.na(reason))%>%
+  summarize(n_reason = n()) %>%
+  ungroup() %>%
+  arrange(n_reason)
+reason_count_delay
+
+reason_count_delay %>%
+  mutate(reason = fct_reorder(reason, n_reason)) %>%
+  ggplot(aes(x = reason, y = n_reason)) +
+  geom_bar(stat = "identity", fill = "blue", alpha = .6) +
+  coord_flip() +
+  labs(title = "Reasons for Delay")
 ```
 
 
+```{r company_reason}
+#breakdown/delay reasons for each company
+nyc_bus %>%
+  filter(breakdown_or_running_late == "Breakdown") %>%
+  ggplot(aes(x = company_name , fill = reason)) + geom_bar() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(title = "breakdown reasons for each company")
+
+nyc_bus %>%
+  filter(breakdown_or_running_late == "Running Late") %>%
+  ggplot(aes(x = company_name , fill = reason)) + geom_bar() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(title = "breakdown reasons for each company")
+```
+
+
+```{r}
+#distribution of delay duration for each company
+nyc_bus %>%
+  filter(!is.na(how_long_delayed)) %>%
+  ggplot(aes(x = company_name, y = how_long_delayed)) + 
+  geom_violin(aes(fill = company_name), color = "blue", alpha = .5) + 
+  stat_summary(fun.y = median, geom = "point", color = "blue", size = 1)
+```
 
 
 
