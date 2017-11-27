@@ -82,15 +82,19 @@ nyc_bus <-
 ```
 
 ```{r}
-#Breakdwon vount over time
+#Count over time
 nyc_bus %>%
   separate(occurred_on, into = c("date", "time", "am_pm"), sep = " ") %>%
   mutate(datetime = format(strptime(str_c(time, am_pm, sep = " "), "%I:%M:%S %p"), "%H:%M:%S")) %>%
   count(datetime, boro) %>%
-  rename(breakdown_count = n) %>%
-  ggplot(aes(x = datetime, y = breakdown_count, fill = boro, color = boro)) +
+  rename(delay_count = n) %>%
+  ggplot(aes(x = datetime, y = delay_count, fill = boro, color = boro)) +
   geom_point() +
-  geom_smooth()
+  geom_smooth() +
+  theme(text = element_text(size = 10),
+        axis.text.x = element_text(angle = 90, hjust = 1),
+        plot.title = element_text(hjust = 0.5)) +
+  scale_x_discrete(breaks = c("00:00:00", "06:00:00", "12:00:00", "18:00:00"))
 ```
 
 ```{r}
@@ -140,8 +144,7 @@ nyc_bus %>%
 There are 11748 routes where breakdowns occur. We choose the most common ones with more than 200 breakdowns and make a barplot.
 
 ```{r top_routes}
-library(forcats)
-
+#top routes
 nyc_bus %>%
   filter(breakdown_or_running_late == "Breakdown") %>%
   group_by(route_number) %>%
