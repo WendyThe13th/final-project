@@ -10,10 +10,6 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-```
-
-
-```{r}
 library(tidyverse)
 library(readr)
 library(janitor)
@@ -23,13 +19,61 @@ library(chron)
 library(forcats)
 ```
 
-
 #Description
 ```{r}
 #read and clean data
 nyc_bus <- 
   read_csv("./Bus_Breakdown_and_Delays.csv") %>%
-  clean_names() %>%
+  clean_names()
+
+#Delay Clean
+nyc_bus_delay <-
+  nyc_bus %>%
+  filter(grepl(pattern = '^[0-9]+', how_long_delayed, perl = TRUE) == TRUE) %>%
+  select(busbreakdown_id,how_long_delayed) %>%
+  mutate(how_long_delayed = tolower(how_long_delayed)) 
+
+nyc_bus_delay_hour <-
+  nyc_bus_delay %>%
+  filter(grepl("h", how_long_delayed, ignore.case = T)== TRUE) %>%
+  mutate(how_long_delayed 
+         =
+           ifelse(grepl("1 hr 30", how_long_delayed)== TRUE,"90",
+                  ifelse(grepl("1 hr 45min", how_long_delayed)== TRUE,"105",
+                         ifelse(grepl("1 hr 30min", how_long_delayed)== TRUE,"90",
+                                ifelse(grepl("1hour", how_long_delayed)== TRUE,"60",
+                                       ifelse(grepl("1 hour", how_long_delayed)== TRUE,"60",
+                                              ifelse(grepl("1 h", how_long_delayed)== TRUE,"60",
+                                                     ifelse(grepl("1h", how_long_delayed)== TRUE,"60",
+                                                            ifelse(grepl("1/2", how_long_delayed)== TRUE,"30",
+                                                                ifelse(grepl("2", how_long_delayed)== TRUE,"120",
+                                                                       ifelse(grepl("4", how_long_delayed)== TRUE,"240","NA")))))))))))
+
+nyc_bus_delay_min <- nyc_bus_delay %>%
+  filter(grepl("h", how_long_delayed, ignore.case = T)== FALSE) %>%
+  mutate(how_long_delayed = substr(how_long_delayed,1,2)) %>%
+  mutate(how_long_delayed = sub(pattern = 'm',replacement = '', how_long_delayed),
+         how_long_delayed = sub(pattern = '/',replacement = '', how_long_delayed),
+         how_long_delayed = sub(pattern = ':',replacement = '', how_long_delayed),
+         how_long_delayed = sub(pattern = 'o',replacement = '', how_long_delayed),
+         how_long_delayed = sub(pattern = '-',replacement = '', how_long_delayed),
+         how_long_delayed = sub(pattern = '02',replacement = '2', how_long_delayed),
+         how_long_delayed = sub(pattern = '07',replacement = '7', how_long_delayed),
+         how_long_delayed = sub(pattern = '00',replacement = '0', how_long_delayed),
+         how_long_delayed = sub(pattern = '08',replacement = '8', how_long_delayed),
+         how_long_delayed = sub(pattern = '01',replacement = '1', how_long_delayed),
+         how_long_delayed = sub(pattern = '\\.',replacement = '', how_long_delayed)) %>%
+  mutate(how_long_delayed = str_trim(how_long_delayed))
+
+nyc_bus_delay <- rbind(nyc_bus_delay_hour,nyc_bus_delay_min)
+
+nyc_bus <- nyc_bus %>% 
+  select(- how_long_delayed) 
+nyc_bus <- merge(nyc_bus,nyc_bus_delay, by.x = "busbreakdown_id", by.y = "busbreakdown_id", all = TRUE) 
+
+#Company name clean
+nyc_bus <- 
+  nyc_bus %>%
   filter(!is.na(boro)) %>%  #filter NA in boro variable
   mutate(bus_company_name = tolower(bus_company_name),
          company_name = str_sub(bus_company_name,1,5)) %>%   #find the unique company name
