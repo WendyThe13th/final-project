@@ -74,8 +74,7 @@ nyc_bus <- merge(nyc_bus,nyc_bus_delay, by.x = "busbreakdown_id", by.y = "busbre
 #Company name clean
 nyc_bus <-
   nyc_bus %>%
-  filter(!is.na(boro),
-         !is.na(how_long_delayed)) %>%  #filter NAs
+  filter(!is.na(boro)) %>%  #filter NAs
   mutate(bus_company_name = tolower(bus_company_name),
          company_name = str_sub(bus_company_name,1,5)) %>%   #find the unique company name
   select(school_year:bus_company_name,company_name,everything())
