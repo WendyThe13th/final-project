@@ -238,6 +238,42 @@ reason_count_delay %>%
 
 We found that the most commom known reason for delay is heavy traffic.
 
+## Average delay duration by reason
+**We want to find out what kind of problem tends to have longer delay duration.**
+```{r}
+#Average delay duration by reason
+nyc_bus %>%
+  filter(!is.na(reason),
+         !is.na(how_long_delayed)) %>%
+  group_by(reason) %>%
+  summarise(avg_time = mean(how_long_delayed)) %>%
+  ggplot(mapping = aes(x = reason, y = avg_time, fill = reason)) + 
+  geom_bar(stat= 'identity') +
+  ggtitle("Average delay duration by reason") +
+  labs(x = "Reason of delay", y = "Avergae delay duration") +
+  theme(text = element_text(size = 10),
+        axis.text.x = element_text(angle = 90, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+```
+
+We can see the average delay duration by different reasons from the plot. Accident and mechanical problem tend to cause the longest delay duration while delayed by school and heavy traffic tend to have the shortest delay duration.
+
+## Cumulative delay duration by reason
+**It is a funny thing that while heavy traffic is NO.1 reason for delay, its average delay duartion is quite short. Then we are interested in which reason has the longest cumulative delay reason.**
+```{r}
+nyc_bus %>%
+  filter(!is.na(reason),
+         !is.na(how_long_delayed)) %>%
+  group_by(reason) %>%
+  summarise(avg_time = mean(how_long_delayed), n_reason = n()) %>%
+  mutate(cumulative = avg_time * n_reason) %>%
+  arrange(cumulative) %>%
+  select(-avg_time, -n_reason) %>%
+  knitr::kable()
+```
+
+Then we can see from the table that heavy traffic has the longest cumulative delay duration. 
+
 ## Breakdown/Delay reasons and distribution of delay duration for each company
 ```{r company_reason}
 #breakdown/delay reasons for each company
@@ -287,6 +323,9 @@ nyc_bus %>%
   labs(title = "Boxplot of delay duration for each company")
 ```
 
+## Effect of route planning
+
+**There are two types of  route service, one is for school-age and the other is for Pre-K/EI population. These two busing types have very different contract terms. OPT does not perform route planning for Pre-K service and doesn't assign route numbers. We want to find out whether different service type (having route planned by OPT or not) is associated with the time of delay.**
 
 ```{r}
 #Effect of route planning 
@@ -301,21 +340,7 @@ nyc_bus %>%
         plot.title = element_text(hjust = 0.5))
 ```
 
-```{r}
-#Relationship between delay duration and corresponded reason
-nyc_bus %>%
-  filter(!is.na(reason),
-         !is.na(how_long_delayed)) %>%
-  group_by(reason) %>%
-  summarise(avg_time = mean(how_long_delayed)) %>%
-  ggplot(mapping = aes(x = reason, y = avg_time, fill = reason)) + 
-  geom_bar(stat= 'identity') +
-  ggtitle("Average delay duration by reason") +
-  labs(x = "Reason of delay", y = "Avergae delay duration") +
-  theme(text = element_text(size = 10),
-        axis.text.x = element_text(angle = 90, hjust = 1),
-        plot.title = element_text(hjust = 0.5))
-```
+We can see from the plot above that the route service for School-Age population has longer average delay duration because of running late than Pre-K. Besides, the distribution of delay duration of the route service for School-Age population has much more outliers. This means route planning has a negative effect on the school bus arriving in time. Given that heavy traffic is the NO.1 reason for delay and has the longest cumulative delay duration(has been disscussed above), we spectulate that this result is due to the inflexibility of route planning. School buses serving for School-Age can not change routes when running into heavy traffic, so they tend to delay longer than those for Pre-K. 
 
 ```{r}
 #reaction time of notifying of each company
