@@ -267,5 +267,19 @@ nyc_bus %>%
   labs(title = "Boxplot ofdelay duration for each company")
 ```
 
-
+```{r}
+#Relationship between delay duration and corresponded reason
+nyc_bus %>%
+  filter(!is.na(reason),
+         !is.na(how_long_delayed)) %>%
+  group_by(reason) %>%
+  summarise(avg_time = mean(how_long_delayed)) %>%
+  ggplot(mapping = aes(x = reason, y = avg_time, fill = reason)) + 
+  geom_bar(stat= 'identity') +
+  ggtitle("Average delay duration by reason") +
+  labs(x = "Reason of delay", y = "Avergae delay duration") +
+  theme(text = element_text(size = 10),
+        axis.text.x = element_text(angle = 90, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+```
 
