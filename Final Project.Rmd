@@ -99,15 +99,18 @@ nyc_bus %>%
 
 ```{r}
 #Number of Breakdown by boros
-nyc_bus %>% 
+nyc_bus %>%
+  filter(breakdown_or_running_late == "Breakdown") %>%
   group_by(boro) %>% 
   count() %>% 
   ungroup() %>% 
   mutate(boro = as.factor(boro),
          boro = fct_reorder(boro,n)) %>% 
   ggplot(aes(x = boro, y = n, fill = boro)) +
-   geom_bar(stat = "identity",alpha = 0.8) +
-   theme(axis.text.x = element_text(angle = 270)) +
+  geom_bar(stat = "identity",alpha = 0.8) +
+  theme(axis.text.x = element_text(angle = 90),
+        text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5)) +
    labs(y = "number of breakdown", title = "Number of Breakdown by boros")
 ```
 
@@ -144,7 +147,7 @@ nyc_bus %>%
 There are 11748 routes where breakdowns occur. We choose the most common ones with more than 200 breakdowns and make a barplot.
 
 ```{r top_routes}
-#top routes
+#top routes with breakdown
 nyc_bus %>%
   filter(breakdown_or_running_late == "Breakdown") %>%
   group_by(route_number) %>%
@@ -156,8 +159,11 @@ nyc_bus %>%
   ggplot(aes(x = route_number, y = n_route)) +
   geom_bar(stat = "identity", fill = "blue", alpha = .6) +
   coord_flip() +
-  labs(title = "Top 10 routes where breakdowns occur")
-
+  labs(title = "Top 10 routes where breakdowns occur") +
+  theme(axis.text.x = element_text(angle = 90),
+        text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5))
+#top routes with running
 nyc_bus %>%
   filter(breakdown_or_running_late == "Running Late") %>%
   group_by(route_number) %>%
@@ -169,7 +175,10 @@ nyc_bus %>%
   ggplot(aes(x = route_number, y = n_route)) +
   geom_bar(stat = "identity", fill = "blue", alpha = .6) +
   coord_flip() +
-  labs(title = "Top 10 routes where delay occur")
+  labs(title = "Top 10 routes where delay occur") +
+  theme(axis.text.x = element_text(angle = 90),
+        text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5))
 ```
 
 
@@ -190,7 +199,9 @@ reason_count_break %>%
   ggplot(aes(x = reason, y = n_reason)) +
   geom_bar(stat = "identity", fill = "blue", alpha = .6) +
   coord_flip() +
-  labs(title = "Reasons for Breakdown")
+  labs(title = "Reasons for Breakdown") +
+  theme(text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5))
 
 reason_count_delay = nyc_bus %>%
   filter(breakdown_or_running_late == "Running Late") %>%
@@ -206,7 +217,9 @@ reason_count_delay %>%
   ggplot(aes(x = reason, y = n_reason)) +
   geom_bar(stat = "identity", fill = "blue", alpha = .6) +
   coord_flip() +
-  labs(title = "Reasons for Delay")
+  labs(title = "Reasons for Delay") +
+  theme(text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5))
 ```
 
 
@@ -216,25 +229,43 @@ nyc_bus %>%
   filter(breakdown_or_running_late == "Breakdown") %>%
   ggplot(aes(x = company_name , fill = reason)) + geom_bar() +
   theme(axis.text.x = element_text(angle = 90)) +
-  labs(title = "breakdown reasons for each company")
+  labs(title = "Breakdown reasons for each company") +
+  theme(text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5))
 
 nyc_bus %>%
   filter(breakdown_or_running_late == "Running Late") %>%
   ggplot(aes(x = company_name , fill = reason)) + geom_bar() +
   theme(axis.text.x = element_text(angle = 90)) +
-  labs(title = "breakdown reasons for each company")
+  labs(title = "Breakdown reasons for each company") +
+  theme(text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5))
 ```
 
 
 ```{r}
 #distribution of delay duration for each company
+company_level <- 
+  nyc_bus %>%
+  filter(!is.na(how_long_delayed)) %>%
+  group_by(company_name) %>%
+  summarise(mean_duration = mean(how_long_delayed, na.rm = T)) %>%
+  arrange(desc(mean_duration)) %>%
+  pull(company_name)
+
+
 nyc_bus %>%
+  mutate(company_name = forcats::fct_relevel(company_name, company_level)) %>%
   filter(!is.na(how_long_delayed)) %>%
   ggplot(aes(x = company_name, y = how_long_delayed)) + 
-  geom_violin(aes(fill = company_name), color = "blue", alpha = .5) + 
-  stat_summary(fun.y = median, geom = "point", color = "blue", size = 1)
+  geom_boxplot(aes(fill = company_name), color = "blue", alpha = .5, outlier.size = 0.7) + 
+  stat_summary(fun.y = median, geom = "point", color = "blue") +
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none", 
+        text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Boxplot ofdelay duration for each company")
 ```
-
 
 
 
