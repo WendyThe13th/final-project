@@ -81,8 +81,9 @@ nyc_bus <-
   select(school_year:bus_company_name,company_name,everything())
 ```
 
+##Breakdown Counts and Delay Distribution during the day by boros
 ```{r}
-#Count over time
+#Delay count over time by boros
 nyc_bus %>%
   separate(occurred_on, into = c("date", "time", "am_pm"), sep = " ") %>%
   mutate(datetime = format(strptime(str_c(time, am_pm, sep = " "), "%I:%M:%S %p"), "%H:%M:%S")) %>%
@@ -96,6 +97,8 @@ nyc_bus %>%
         plot.title = element_text(hjust = 0.5)) +
   scale_x_discrete(breaks = c("00:00:00", "06:00:00", "12:00:00", "18:00:00"))
 ```
+
+We found that during the day, the school bus delay occurs mainly focucs on 7:00-8:00am and 2:00-3:00pm, which are the commonsensible rush hours. The delay happens most frequently in Brooklyn and Bronx, and happens least frequently in Staten Island and Westchester, indicating the traffic condition of these boros.
 
 ```{r}
 #Number of Breakdown by boros
@@ -114,7 +117,9 @@ nyc_bus %>%
    labs(y = "number of breakdown", title = "Number of Breakdown by boros")
 ```
 
+We found that the breakdown happens most frequently in Queens and Bronx(approximately 6000), and least frequently in Connecticut, Rockland County, New Jersey and Westchester(around 0).
 
+##Top Routes of Breakdown and Delay
 ```{r summary_function}
 #Top routes where breakdowns or delays occur
 summary_by_total <- function(data){
@@ -127,9 +132,7 @@ summary_by_total <- function(data){
        max = apply(data, 2, max)) %>%
     as.tibble()
 }
-```
 
-```{r summary_routes_breakdown}
 nyc_bus %>%
   filter(breakdown_or_running_late == "Breakdown") %>%
   group_by(route_number) %>%
@@ -144,7 +147,8 @@ nyc_bus %>%
   select(delay) %>%
   summary_by_total()
 ```
-There are 11748 routes where breakdowns occur. We choose the most common ones with more than 200 breakdowns and make a barplot.
+
+There are 6418 routes where breakdown occur and 11034 routes where delay occur. 
 
 ```{r top_routes}
 #top routes with breakdown
@@ -163,6 +167,11 @@ nyc_bus %>%
   theme(axis.text.x = element_text(angle = 90),
         text = element_text(size = 10),
         plot.title = element_text(hjust = 0.5))
+```
+
+We found that the top 10 routes of breakdown all have more than 20 breakdown counts. And the X597 and X920 route have the largest breakdown counts (39 and 41, respectively).
+
+```{r}
 #top routes with running
 nyc_bus %>%
   filter(breakdown_or_running_late == "Running Late") %>%
@@ -181,8 +190,9 @@ nyc_bus %>%
         plot.title = element_text(hjust = 0.5))
 ```
 
+We found that in the top 10 routes of delay, route 1 and 2 have the largest delay counts of more than 2000(2830 and 2349, respectively). 
 
-
+##Reasons of breakdown and delay
 ```{r reason_breakdown}
 # Main reasons for school bus breakdowns and delays
 reason_count_break = nyc_bus %>%
@@ -202,7 +212,11 @@ reason_count_break %>%
   labs(title = "Reasons for Breakdown") +
   theme(text = element_text(size = 10),
         plot.title = element_text(hjust = 0.5))
+```
 
+We found that the most commom known reasons for breakdown are mechanical problem, won't start and flat tire. We suggest the companies checking the condition of schoolbuses regularly.
+
+```{r}
 reason_count_delay = nyc_bus %>%
   filter(breakdown_or_running_late == "Running Late") %>%
   group_by(reason) %>%
@@ -222,7 +236,9 @@ reason_count_delay %>%
         plot.title = element_text(hjust = 0.5))
 ```
 
+We found that the most commom known reason for delay is heavy traffic.
 
+## Breakdown/Delay reasons and distribution of delay duration for each company
 ```{r company_reason}
 #breakdown/delay reasons for each company
 nyc_bus %>%
@@ -232,7 +248,10 @@ nyc_bus %>%
   labs(title = "Breakdown reasons for each company") +
   theme(text = element_text(size = 10),
         plot.title = element_text(hjust = 0.5))
+```
 
+We found that the company "LITTLE RICHIE BUS SERVICE" has the largest breakdown counts (approximately 5000), following are "LOGAN BUS COMPANY INC." and "RELIANT TRANS, INC." (approximately 2000). For each company, the breakdown reasons are mainly mechanical problem, won't start flat tire and other. The result is similar to the common reasons of breakdown. 
+```{r}
 nyc_bus %>%
   filter(breakdown_or_running_late == "Running Late") %>%
   ggplot(aes(x = company_name , fill = reason)) + geom_bar() +
@@ -242,6 +261,7 @@ nyc_bus %>%
         plot.title = element_text(hjust = 0.5))
 ```
 
+We found that the company "G.V.C., LTD.","LEESEL TRANSP CORP","NEW DAWN TRANSIT, LLC","PIONEER TRANSPORTATION CO", and "RELIANT TRANS, INC." have the largest delay counts (above 100000). For each company, the delay reasons are mainly heavy traffic, mechanical problem, and other. The result is similar to the common reasons of delay.
 
 ```{r}
 #distribution of delay duration for each company
@@ -266,6 +286,7 @@ nyc_bus %>%
         plot.title = element_text(hjust = 0.5)) +
   labs(title = "Boxplot of delay duration for each company")
 ```
+
 
 ```{r}
 #Effect of route planning 
@@ -314,6 +335,7 @@ nyc_bus_reaction %>%
   select(occur_time, inform_time, reaction_time, is_same_time) %>%
   filter(is_same_time != 0) %>%
   arrange(is_same_time)
+
 #the mean reaction time among the company occurred date and informed date are the same
 nyc_bus_reaction %>%
   select(company_name, occur_time, inform_time, reaction_time, is_same_time) %>%
