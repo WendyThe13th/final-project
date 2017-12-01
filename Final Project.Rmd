@@ -264,7 +264,20 @@ nyc_bus %>%
         legend.position = "none", 
         text = element_text(size = 10),
         plot.title = element_text(hjust = 0.5)) +
-  labs(title = "Boxplot ofdelay duration for each company")
+  labs(title = "Boxplot of delay duration for each company")
+```
+
+```{r}
+#Effect of route planning 
+nyc_bus %>%
+  filter(breakdown_or_running_late == "Running Late") %>%
+  ggplot(aes(x = school_age_or_prek, y = how_long_delayed)) +
+  geom_boxplot() +
+  ggtitle("Effect of route planning") +
+  labs(x = "Route servive", y = "Delay duration because of running late") +
+  theme(text = element_text(size = 10),
+        axis.text.x = element_text(angle = 90, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r}
