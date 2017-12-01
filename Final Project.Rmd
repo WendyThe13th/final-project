@@ -283,3 +283,29 @@ nyc_bus %>%
         plot.title = element_text(hjust = 0.5))
 ```
 
+```{r}
+#reaction time of notifying of each company
+nyc_bus_reaction <- 
+  nyc_bus %>%
+  separate(occurred_on, into = c("occur_date", "occur_time", "occur_am_pm"), sep = " ") %>%
+  separate(informed_on, into = c("inform_date", "inform_time", "inform_am_pm"), sep = " ") %>%
+  mutate(occur_datetime = as.POSIXct(strptime(str_c(occur_time, occur_am_pm, sep = " "), "%I:%M:%S %p")),
+         inform_datetime = as.POSIXct(strptime(str_c(inform_time, inform_am_pm, sep = " "), "%I:%M:%S %p")),
+         reaction_time = inform_datetime - occur_datetime,
+         is_same_time = as.Date(inform_date, format = "%m/%d/%Y") - as.Date(occur_date, format = "%m/%d/%Y"),
+         occur_time = str_c(occur_date, occur_time, occur_am_pm, sep = " "),
+         inform_time = str_c(inform_date, inform_time, inform_am_pm, sep = " "))
+
+#inspect the cases that the occurred date and informed date are not the same
+nyc_bus_reaction %>%
+  select(occur_time, inform_time, reaction_time, is_same_time) %>%
+  filter(is_same_time != 0) %>%
+  arrange(is_same_time)
+#the mean reaction time among the company occurred date and informed date are the same
+nyc_bus_reaction %>%
+  select(company_name, occur_time, inform_time, reaction_time, is_same_time) %>%
+  filter(is_same_time == 0) %>%
+  group_by(company_name) %>%
+  summarise(mean_reaction = mean(reaction_time)) %>%
+  arrange(desc(mean_reaction))
+```
