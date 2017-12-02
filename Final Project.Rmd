@@ -6,15 +6,16 @@ output:
    html_document:
     toc: true
     toc_float: true
+    code_folding: hide
 ---
 
-<font size = 4>
+<font size = 3>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
                       warning = FALSE, 
                       message = FALSE, 
-                      collapse = TRUE,  
+                      collapse = TRUE,
                       fig.width = 6,
                       fig.asp = .6,
                       out.width = "90%"
@@ -31,9 +32,10 @@ library(forcats)
 ```
 
 #1. Introduction
+The Office of Pupil Transportation(OPT) administers school bus service to New York City schools for students attending both public and non-public schools, and it aims to use the Bus Breakdown and Delay system to inform parents who call with questions regarding bus service. The Bus Breakdown and Delay system collects information from school bus vendors operating out in the field in real time about the occur and inform time, delay duration, breakdown and delay reasons, and other operation information.
 
 #2. Data and methods
-
+Data consist of breakdown and delay information of schoolbus in New York during 2015-2016, 2016-2017 and 2017-2018 school years (except July, August and September), including occur time, inform time, delay duration, reason, bus company that provided service, run type, route and boro about breakdown and delay. These real time updated data are stored in Bus_Breakdown_and_Delays.csv. To prepare these data for analysis, we import, unity delay duration into minutes, and clear up company names by extracting common words.
 
 For this project, we focus on exploratory analyses and anticipation. Within the exploratory analysis, we compare different school bus companies by delay duration, reaction time and work fault.We also compare route services by the odds of notifying and the effect of route planning. Within the anticipation part, we build a model to predict the delay duration. Office of Pupil Transportation would be able to get the expected delay duration with this model and inform the parents who call.
 
