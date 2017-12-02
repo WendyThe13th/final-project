@@ -92,6 +92,7 @@ nyc_bus %>%
   ggplot(aes(x = datetime, y = delay_count, fill = boro, color = boro)) +
   geom_point() +
   geom_smooth() +
+  ggtitle("number of delay in one day by boros") + 
   theme(text = element_text(size = 10),
         axis.text.x = element_text(angle = 90, hjust = 1),
         plot.title = element_text(hjust = 0.5)) +
@@ -261,6 +262,7 @@ We can see the average delay duration by different reasons from the plot. Accide
 ## Cumulative delay duration by reason
 **It is a funny thing that while heavy traffic is NO.1 reason for delay, its average delay duartion is quite short. Then we are interested in which reason has the longest cumulative delay reason.**
 ```{r}
+#cumulative delay duration by reason
 nyc_bus %>%
   filter(!is.na(reason),
          !is.na(how_long_delayed)) %>%
@@ -288,11 +290,12 @@ nyc_bus %>%
 
 We found that the company "LITTLE RICHIE BUS SERVICE" has the largest breakdown counts (approximately 5000), following are "LOGAN BUS COMPANY INC." and "RELIANT TRANS, INC." (approximately 2000). For each company, the breakdown reasons are mainly mechanical problem, won't start flat tire and other. The result is similar to the common reasons of breakdown. 
 ```{r}
+#Running late reasons for each company
 nyc_bus %>%
   filter(breakdown_or_running_late == "Running Late") %>%
   ggplot(aes(x = company_name , fill = reason)) + geom_bar() +
   theme(axis.text.x = element_text(angle = 90)) +
-  labs(title = "Breakdown reasons for each company") +
+  labs(title = "Running late reasons for each company") +
   theme(text = element_text(size = 10),
         plot.title = element_text(hjust = 0.5))
 ```
@@ -309,7 +312,7 @@ company_level <-
   arrange(desc(mean_duration)) %>%
   pull(company_name)
 
-
+#boxplot of delay duration for each company
 nyc_bus %>%
   mutate(company_name = forcats::fct_relevel(company_name, company_level)) %>%
   filter(!is.na(how_long_delayed)) %>%
@@ -372,11 +375,12 @@ nyc_bus_reaction %>%
 
 ## Odds of notifying differed by two busing types
 ```{r}
-  nyc_bus %>% 
+#odds of notifying differed by two busing types
+nyc_bus %>% 
   group_by(school_age_or_prek,has_contractor_notified_schools,has_contractor_notified_parents) %>%
   count() %>% 
   ungroup() %>% 
-  mutate(notify = ifelse(has_contractor_notified_parents == "Yes" & has_contractor_notified_schools == "Yes","both","not_both")) %>% 
+  mutate(notify = ifelse(has_contractor_notified_parents == "Yes" & has_contractor_notified_schools == "Yes","both","not_both")) %>%
   select(school_age_or_prek,notify,n) %>% 
   group_by(school_age_or_prek,notify) %>% 
   summarise(count = sum(n)) %>% 
