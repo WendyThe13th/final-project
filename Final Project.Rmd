@@ -18,8 +18,15 @@ library(stringr)
 library(chron)
 library(forcats)
 ```
+#1. Introduction
 
-#Description
+#2. Data and methods
+
+
+For this project, we focus on exploratory analyses and anticipation. Within the exploratory analysis, we compare different school bus companies by delay duration, reaction time and work fault.We also compare route services by the odds of notifying and the effect of route planning. Within the anticipation part, we build a model to predict the delay duration. Office of Pupil Transportation would be able to get the expected delay duration with this model and inform the parents who call.
+
+#3. Results
+##3.1 Description
 ```{r}
 #Read and clean data
 nyc_bus <- 
@@ -81,7 +88,7 @@ nyc_bus <-
   select(school_year:bus_company_name,company_name,everything())
 ```
 
-##Breakdown Counts and Delay Distribution during the day by boros
+### 3.1.1 Breakdown and Delay Distribution during the day 
 ```{r}
 #Delay count over time by boros
 nyc_bus %>%
@@ -92,7 +99,7 @@ nyc_bus %>%
   ggplot(aes(x = datetime, y = delay_count, fill = boro, color = boro)) +
   geom_point() +
   geom_smooth() +
-  ggtitle("number of delay in one day by boros") + 
+  ggtitle("Breakdown and Delay Distribution during the day") + 
   theme(text = element_text(size = 10),
         axis.text.x = element_text(angle = 90, hjust = 1),
         plot.title = element_text(hjust = 0.5)) +
@@ -101,99 +108,7 @@ nyc_bus %>%
 
 We found that during the day, the school bus delay occurs mainly focucs on 7:00-8:00am and 2:00-3:00pm, which are the commonsensible rush hours. The delay happens most frequently in Brooklyn and Bronx, and happens least frequently in Staten Island and Westchester, indicating the traffic condition of these boros.
 
-```{r}
-#Number of Breakdown by boros
-nyc_bus %>%
-  filter(breakdown_or_running_late == "Breakdown") %>%
-  group_by(boro) %>% 
-  count() %>% 
-  ungroup() %>% 
-  mutate(boro = as.factor(boro),
-         boro = fct_reorder(boro,n)) %>% 
-  ggplot(aes(x = boro, y = n, fill = boro)) +
-  geom_bar(stat = "identity",alpha = 0.8) +
-  theme(axis.text.x = element_text(angle = 90),
-        text = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5)) +
-   labs(y = "number of breakdown", title = "Number of Breakdown by boros")
-```
-
-We found that the breakdown happens most frequently in Queens and Bronx(approximately 6000), and least frequently in Connecticut, Rockland County, New Jersey and Westchester(around 0).
-
-##Top Routes of Breakdown and Delay
-```{r summary_function}
-#Top routes where breakdowns or delays occur
-summary_by_total <- function(data){
-  list(variable = colnames(data),
-       num_obs = rep(nrow(data), ncol(data)),
-       mean = apply(data, 2, mean),
-       sd = apply(data, 2, sd),
-       min = apply(data, 2, min),
-       median = apply(data, 2, median),
-       max = apply(data, 2, max)) %>%
-    as.tibble()
-}
-
-nyc_bus %>%
-  filter(breakdown_or_running_late == "Breakdown") %>%
-  group_by(route_number) %>%
-  summarize(breakdown = n()) %>%
-  select(breakdown) %>%
-  summary_by_total()
-
-nyc_bus %>%
-  filter(breakdown_or_running_late == "Running Late") %>%
-  group_by(route_number) %>%
-  summarize(delay = n()) %>%
-  select(delay) %>%
-  summary_by_total()
-```
-
-There are 6418 routes where breakdown occur and 11034 routes where delay occur. 
-
-```{r top_routes}
-#top routes with breakdown
-nyc_bus %>%
-  filter(breakdown_or_running_late == "Breakdown") %>%
-  group_by(route_number) %>%
-  summarize(n_route = n()) %>%
-  ungroup() %>%
-  mutate(route_rank=min_rank(desc(n_route))) %>%
-  filter(route_rank <= 10) %>%
-  mutate(route_number = fct_reorder(route_number, n_route)) %>%
-  ggplot(aes(x = route_number, y = n_route)) +
-  geom_bar(stat = "identity", fill = "blue", alpha = .6) +
-  coord_flip() +
-  labs(title = "Top 10 routes where breakdowns occur") +
-  theme(axis.text.x = element_text(angle = 90),
-        text = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5))
-```
-
-We found that the top 10 routes of breakdown all have more than 20 breakdown counts. And the X597 and X920 route have the largest breakdown counts (39 and 41, respectively).
-
-```{r}
-#top routes with running
-nyc_bus %>%
-  filter(breakdown_or_running_late == "Running Late") %>%
-  group_by(route_number) %>%
-  summarize(n_route = n()) %>%
-  ungroup() %>%
-  mutate(route_rank=min_rank(desc(n_route))) %>%
-  filter(route_rank <= 10) %>%
-  mutate(route_number = fct_reorder(route_number, n_route)) %>%
-  ggplot(aes(x = route_number, y = n_route)) +
-  geom_bar(stat = "identity", fill = "blue", alpha = .6) +
-  coord_flip() +
-  labs(title = "Top 10 routes where delay occur") +
-  theme(axis.text.x = element_text(angle = 90),
-        text = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5))
-```
-
-We found that in the top 10 routes of delay, route 1 and 2 have the largest delay counts of more than 2000(2830 and 2349, respectively). 
-
-##Reasons of breakdown and delay
+###3.1.2 Reasons of breakdown and delay
 ```{r reason_breakdown}
 # Main reasons for school bus breakdowns and delays
 reason_count_break = nyc_bus %>%
@@ -203,9 +118,9 @@ reason_count_break = nyc_bus %>%
   summarize(n_reason = n()) %>%
   ungroup() %>%
   arrange(n_reason)
-reason_count_break
 
-reason_count_break %>%
+
+reason_count_break <- reason_count_break %>%
   mutate(reason = fct_reorder(reason, n_reason)) %>%
   ggplot(aes(x = reason, y = n_reason)) +
   geom_bar(stat = "identity", fill = "blue", alpha = .6) +
@@ -213,11 +128,7 @@ reason_count_break %>%
   labs(title = "Reasons for Breakdown") +
   theme(text = element_text(size = 10),
         plot.title = element_text(hjust = 0.5))
-```
 
-We found that the most commom known reasons for breakdown are mechanical problem, won't start and flat tire. We suggest the companies checking the condition of schoolbuses regularly.
-
-```{r}
 reason_count_delay = nyc_bus %>%
   filter(breakdown_or_running_late == "Running Late") %>%
   group_by(reason) %>%
@@ -225,22 +136,23 @@ reason_count_delay = nyc_bus %>%
   summarize(n_reason = n()) %>%
   ungroup() %>%
   arrange(n_reason)
-reason_count_delay
 
-reason_count_delay %>%
+
+reason_count_delay <- reason_count_delay %>%
   mutate(reason = fct_reorder(reason, n_reason)) %>%
   ggplot(aes(x = reason, y = n_reason)) +
   geom_bar(stat = "identity", fill = "blue", alpha = .6) +
   coord_flip() +
-  labs(title = "Reasons for Delay") +
+  labs(title = "Reasons for Running Late") +
   theme(text = element_text(size = 10),
         plot.title = element_text(hjust = 0.5))
+gridExtra::grid.arrange(reason_count_break,reason_count_delay,ncol=2)
 ```
 
-We found that the most commom known reason for delay is heavy traffic.
+We found that the most commom known reasons for breakdown are mechanical problem, won't start and flat tire. We suggest the companies checking the condition of schoolbuses regularly. The most commom known reason for delay is heavy traffic.
 
-## Average delay duration by reason
-**We want to find out what kind of problem tends to have longer delay duration.**
+###3.1.3 Average delay duration by reason
+We want to find out what kind of problem tends to have longer delay duration.
 ```{r}
 #Average delay duration by reason
 nyc_bus %>%
@@ -259,49 +171,9 @@ nyc_bus %>%
 
 We can see the average delay duration by different reasons from the plot. Accident and mechanical problem tend to cause the longest delay duration while delayed by school and heavy traffic tend to have the shortest delay duration.
 
-## Cumulative delay duration by reason
-**It is a funny thing that while heavy traffic is NO.1 reason for delay, its average delay duartion is quite short. Then we are interested in which reason has the longest cumulative delay reason.**
-```{r}
-#cumulative delay duration by reason
-nyc_bus %>%
-  filter(!is.na(reason),
-         !is.na(how_long_delayed)) %>%
-  group_by(reason) %>%
-  summarise(avg_time = mean(how_long_delayed), n_reason = n()) %>%
-  mutate(cumulative = avg_time * n_reason) %>%
-  arrange(cumulative) %>%
-  select(-avg_time, -n_reason) %>%
-  knitr::kable()
-```
-
-Then we can see from the table that heavy traffic has the longest cumulative delay duration. 
-
-## Breakdown/Delay reasons and distribution of delay duration for each company
-```{r company_reason}
-#breakdown/delay reasons for each company
-nyc_bus %>%
-  filter(breakdown_or_running_late == "Breakdown") %>%
-  ggplot(aes(x = company_name , fill = reason)) + geom_bar() +
-  theme(axis.text.x = element_text(angle = 90)) +
-  labs(title = "Breakdown reasons for each company") +
-  theme(text = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5))
-```
-
-We found that the company "LITTLE RICHIE BUS SERVICE" has the largest breakdown counts (approximately 5000), following are "LOGAN BUS COMPANY INC." and "RELIANT TRANS, INC." (approximately 2000). For each company, the breakdown reasons are mainly mechanical problem, won't start flat tire and other. The result is similar to the common reasons of breakdown. 
-```{r}
-#Running late reasons for each company
-nyc_bus %>%
-  filter(breakdown_or_running_late == "Running Late") %>%
-  ggplot(aes(x = company_name , fill = reason)) + geom_bar() +
-  theme(axis.text.x = element_text(angle = 90)) +
-  labs(title = "Running late reasons for each company") +
-  theme(text = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5))
-```
-
-We found that the company "G.V.C., LTD.","LEESEL TRANSP CORP","NEW DAWN TRANSIT, LLC","PIONEER TRANSPORTATION CO", and "RELIANT TRANS, INC." have the largest delay counts (above 100000). For each company, the delay reasons are mainly heavy traffic, mechanical problem, and other. The result is similar to the common reasons of delay.
-
+## 3.2 Exploratory Analysis
+### 3.2.1 Comparison of different companies
+#### 3.2.1.1 Distribution of delay duration of each company
 ```{r}
 #distribution of delay duration for each company
 company_level <- 
@@ -312,7 +184,7 @@ company_level <-
   arrange(desc(mean_duration)) %>%
   pull(company_name)
 
-#boxplot of delay duration for each company
+
 nyc_bus %>%
   mutate(company_name = forcats::fct_relevel(company_name, company_level)) %>%
   filter(!is.na(how_long_delayed)) %>%
@@ -326,26 +198,7 @@ nyc_bus %>%
   labs(title = "Boxplot of delay duration for each company")
 ```
 
-## Effect of route planning
-
-**There are two types of  route service, one is for school-age and the other is for Pre-K/EI population. These two busing types have very different contract terms. OPT does not perform route planning for Pre-K service and doesn't assign route numbers. We want to find out whether different service type (having route planned by OPT or not) is associated with the time of delay.**
-
-```{r}
-#Effect of route planning 
-nyc_bus %>%
-  filter(breakdown_or_running_late == "Running Late") %>%
-  ggplot(aes(x = school_age_or_prek, y = how_long_delayed)) +
-  geom_boxplot() +
-  ggtitle("Effect of route planning") +
-  labs(x = "Route servive", y = "Delay duration because of running late") +
-  theme(text = element_text(size = 10),
-        axis.text.x = element_text(angle = 90, hjust = 1),
-        plot.title = element_text(hjust = 0.5))
-```
-
-We can see from the plot above that the route service for School-Age population has longer average delay duration because of running late than Pre-K. Besides, the distribution of delay duration of the route service for School-Age population has much more outliers. This means route planning has a negative effect on the school bus arriving in time. Given that heavy traffic is the NO.1 reason for delay and has the longest cumulative delay duration(has been disscussed above), we spectulate that this result is due to the inflexibility of route planning. School buses serving for School-Age can not change routes when running into heavy traffic, so they tend to delay longer than those for Pre-K. 
-
-## Reaction time of notifying of each company
+####3.2.2.2 Reaction time of notifying of each company
 ```{r}
 #reaction time of notifying of each company
 nyc_bus_reaction <- 
@@ -368,7 +221,7 @@ nyc_bus_reaction %>%
   arrange(desc(mean_reaction))
 ```
 
-## Work fault
+#### 3.2.2.3 Work fault
 ```{r}
 #inspect the cases that the occurred date and informed date are not the same
 nyc_bus_reaction %>%
@@ -377,18 +230,57 @@ nyc_bus_reaction %>%
   arrange(is_same_time)
 ```
 
-## Odds of notifying differed by two busing types
+### 3.2.2 Comparison of route services
+#### 3.2.2.1 Odds of notifying differed by route services
 ```{r}
-#odds of notifying differed by two busing types
-nyc_bus %>% 
+  nyc_bus %>% 
   group_by(school_age_or_prek,has_contractor_notified_schools,has_contractor_notified_parents) %>%
   count() %>% 
   ungroup() %>% 
-  mutate(notify = ifelse(has_contractor_notified_parents == "Yes" & has_contractor_notified_schools == "Yes","both","not_both")) %>%
+  mutate(notify = ifelse(has_contractor_notified_parents == "Yes" & has_contractor_notified_schools == "Yes","both","not_both")) %>% 
   select(school_age_or_prek,notify,n) %>% 
   group_by(school_age_or_prek,notify) %>% 
   summarise(count = sum(n)) %>% 
   spread(notify,count) %>% 
   mutate(odds = both/not_both) 
 ```
+
+####3.2.2.2 Effect of route planning
+
+It is a funny thing that while heavy traffic is NO.1 reason for delay, its average delay duartion is quite short. Then we are interested in which reason has the longest cumulative delay reason.
+```{r}
+nyc_bus %>%
+  filter(!is.na(reason),
+         !is.na(how_long_delayed)) %>%
+  group_by(reason) %>%
+  summarise(avg_time = mean(how_long_delayed), n_reason = n()) %>%
+  mutate(cumulative = avg_time * n_reason) %>%
+  arrange(cumulative) %>%
+  select(-avg_time, -n_reason) %>%
+  knitr::kable()
+```
+
+Then we can see from the table that heavy traffic has the longest cumulative delay duration. 
+
+There are two types of  route service, one is for school-age and the other is for Pre-K/EI population. These two busing types have very different contract terms. OPT does not perform route planning for Pre-K service and doesn't assign route numbers. We want to find out whether different service type (having route planned by OPT or not) is associated with the time of delay.
+
+```{r}
+#Effect of route planning 
+nyc_bus %>%
+  filter(breakdown_or_running_late == "Running Late") %>%
+  ggplot(aes(x = school_age_or_prek, y = how_long_delayed)) +
+  geom_boxplot() +
+  ggtitle("Effect of route planning") +
+  labs(x = "Route servive", y = "Delay duration because of running late") +
+  theme(text = element_text(size = 10),
+        axis.text.x = element_text(angle = 90, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+```
+
+We can see from the plot above that the route service for School-Age population has longer average delay duration because of running late than Pre-K. Besides, the distribution of delay duration of the route service for School-Age population has much more outliers. This means route planning has a negative effect on the school bus arriving in time. Given that heavy traffic is the NO.1 reason for delay and has the longest cumulative delay duration(has been disscussed above), we spectulate that this result is due to the inflexibility of route planning. School buses serving for School-Age can not change routes when running into heavy traffic, so they tend to delay longer than those for Pre-K. 
+
+## 3.3 Anticipation
+# 4. Discussion
+
+
 
