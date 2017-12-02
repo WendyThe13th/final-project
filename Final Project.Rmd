@@ -294,6 +294,72 @@ nyc_bus %>%
 We can see from the plot above that the route service for School-Age population has longer average delay duration because of running late than Pre-K. Besides, the distribution of delay duration of the route service for School-Age population has much more outliers. This means route planning has a negative effect on the school bus arriving in time. Given that heavy traffic is the NO.1 reason for delay and has the longest cumulative delay duration(has been disscussed above), we spectulate that this result is due to the inflexibility of route planning. School buses serving for School-Age can not change routes when running into heavy traffic, so they tend to delay longer than those for Pre-K. 
 
 ## 3.3 Anticipation
+
+```{r}
+#make classification of delay time according to quantiles
+cutoff <- quantile(nyc_bus$how_long_delayed, c(0.33,0.67), na.rm = TRUE)
+#initailly select covariates for logistics model
+nyc_bus_logit <- 
+  nyc_bus %>% 
+  filter(!is.na(how_long_delayed)) %>% 
+  mutate(delay_class = ifelse(how_long_delayed < cutoff[[1]], "short", ifelse(how_long_delayed > cutoff[[2]],"long","medium"))) %>%
+  select(-c(bus_no, route_number, schools_serviced, created_on, bus_company_name, busbreakdown_id, 
+            has_contractor_notified_schools, has_contractor_notified_parents, have_you_alerted_opt, 
+            informed_on, incident_number, last_updated_on, how_long_delayed, run_type)) %>%
+  separate(occurred_on, into = c("occur_date", "occur_time", "occur_am_pm"), sep = " ") %>%
+  mutate(occur_hour = hour(as.POSIXct(strptime(str_c(occur_time, occur_am_pm, sep = " "), "%I:%M:%S %p")))) %>%
+  select(-c(occur_date, occur_time, occur_am_pm)) %>%
+  na.omit()
+```
+
+```{r}
+#create training and testing sample from original dataset as 7:3 that is proportional to delay class
+delay_short <- nyc_bus_logit %>% 
+  filter(delay_class == "short")
+
+delay_medium <- nyc_bus_logit %>% 
+  filter(delay_class == "medium")
+
+delay_long = nyc_bus_logit %>% 
+  filter(delay_class == "long")
+
+#produce random sample
+set.seed(2017)
+train_short_row <- sample(1:nrow(delay_short), 0.7*nrow(delay_short)) 
+train_medium_row <- sample(1:nrow(delay_medium), 0.7*nrow(delay_medium)) 
+train_long_row <- sample(1:nrow(delay_long), 0.7*nrow(delay_long)) 
+
+
+
+training <-
+  rbind(delay_short[train_short_row,],
+        delay_medium[train_medium_row,],
+        delay_long[train_long_row,]) %>%
+  na.omit()
+
+test <-
+  rbind(delay_short[-train_short_row,],
+        delay_medium[-train_medium_row,],
+        delay_long[-train_long_row,]) %>%
+  filter(!is.na(reason))
+```
+
+```{r}
+library(nnet)
+logit_reg <- multinom(delay_class ~ ., data = training)
+#step(logit_reg)
+#summary(logit_reg)
+test_pre <- 
+  as.tibble(predict(logit_reg, newdata = test, "probs")) %>%
+  mutate(predict_class = apply(., 1, which.is.max),
+         predict_class = recode(predict_class, "1" = "long", "2" = "medium", "3" = "short"))
+#accuracy
+bind_cols(test, test_pre) %>%
+  mutate(accuracy = if_else(predict_class == delay_class, 1, 0)) %>%
+  pull(accuracy) %>%
+  sum()/nrow(test)
+```
+
 # 4. Discussion
 
 
