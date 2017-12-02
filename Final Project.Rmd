@@ -235,6 +235,8 @@ nyc_bus_reaction %>%
   arrange(desc(mean_reaction))
 ```
 
+Reaction time is the time period between inform time and occur time. We find that "FORTUNA BUS COMPANY" has the longest reaction time of three and a half hours, following are "R & C TRANSIT, INC.", "SMART PICK" and "PENNY TRANSPORTATION"(2 hours and 1 hour, respectively).
+
 #### 3.2.2.3 Work fault
 ```{r}
 #inspect the cases that the occurred date and informed date are not the same
