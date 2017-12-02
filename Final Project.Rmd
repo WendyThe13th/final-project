@@ -369,3 +369,18 @@ nyc_bus_reaction %>%
   summarise(mean_reaction = mean(reaction_time)) %>%
   arrange(desc(mean_reaction))
 ```
+
+## Odds of notifying differed by two busing types
+```{r}
+  nyc_bus %>% 
+  group_by(school_age_or_prek,has_contractor_notified_schools,has_contractor_notified_parents) %>%
+  count() %>% 
+  ungroup() %>% 
+  mutate(notify = ifelse(has_contractor_notified_parents == "Yes" & has_contractor_notified_schools == "Yes","both","not_both")) %>% 
+  select(school_age_or_prek,notify,n) %>% 
+  group_by(school_age_or_prek,notify) %>% 
+  summarise(count = sum(n)) %>% 
+  spread(notify,count) %>% 
+  mutate(odds = both/not_both) 
+```
+
