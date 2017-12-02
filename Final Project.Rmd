@@ -138,10 +138,10 @@ reason_count_break <- reason_count_break %>%
   mutate(reason = fct_reorder(reason, n_reason)) %>%
   ggplot(aes(x = reason, y = n_reason)) +
   geom_bar(stat = "identity", fill = "blue", alpha = .6) +
-  coord_flip() +
   labs(title = "Reasons for Breakdown") +
   theme(text = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5))
+        plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 90, hjust = 1))
 
 reason_count_delay = nyc_bus %>%
   filter(breakdown_or_running_late == "Running Late") %>%
@@ -156,10 +156,10 @@ reason_count_delay <- reason_count_delay %>%
   mutate(reason = fct_reorder(reason, n_reason)) %>%
   ggplot(aes(x = reason, y = n_reason)) +
   geom_bar(stat = "identity", fill = "blue", alpha = .6) +
-  coord_flip() +
   labs(title = "Reasons for Running Late") +
   theme(text = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5))
+        plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 90, hjust = 1))
 gridExtra::grid.arrange(reason_count_break,reason_count_delay,ncol=2)
 ```
 
