@@ -423,8 +423,9 @@ logistic_probs = function(i){
   
   tibble(i, accuracy)
 }
+
 #make the final tibble with results of prediction probability of 10 logistics regression
-map_df(1:10,~logistic_probs(.)) 
+map_df(1:10,~logistic_probs(.)) %>% knitr::kable()
 
 
 nyc_bus_logit_model <- multinom(delay_class ~ ., data = training[[1]])
@@ -433,6 +434,8 @@ logit_test_pre <-
   as.tibble(predict(nyc_bus_logit_model, newdata = test, "probs")) %>%
   mutate(predict_class = apply(., 1, which.is.max),
          predict_class = recode(predict_class, "1" = "long", "2" = "medium", "3" = "short"))
+#show predict result
+logit_test_pre %>% head(10) %>%  knitr::kable()
 #show the predict result graphically
 library(plotly)
 bind_cols(test[[1]], logit_test_pre) %>%
