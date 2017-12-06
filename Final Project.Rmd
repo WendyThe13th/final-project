@@ -37,10 +37,7 @@ The Office of Pupil Transportation(OPT) administers school bus service to New Yo
 #2. Data and methods
 Data consist of breakdown and delay information of schoolbus in New York during 2015-2016, 2016-2017 and 2017-2018 school years (except July, August and September), including occur time, inform time, delay duration, reason, bus company that provided service, run type, route and boro about breakdown and delay. These real time updated data are stored in Bus_Breakdown_and_Delays.csv. To prepare these data for analysis, we import, unity delay duration into minutes, and clear up company names by extracting common words.
 
-For this project, we focus on exploratory analyses and anticipation. Within the exploratory analysis, we compare different school bus companies by delay duration, reaction time and work fault.We also compare route services by the odds of notifying and the effect of route planning. Within the anticipation part, we build a model to predict the delay duration. Office of Pupil Transportation would be able to get the expected delay duration with this model and inform the parents who call.
 
-#3. Results
-##3.1 Description
 ```{r}
 #Read and clean data
 nyc_bus <- 
@@ -102,6 +99,10 @@ nyc_bus <-
   select(school_year:bus_company_name,company_name,everything())
 ```
 
+For this project, we focus on exploratory analyses and anticipation. Within the exploratory analysis, we compare different school bus companies by delay duration, reaction time and work fault.We also compare route services by the odds of notifying and the effect of route planning. Within the anticipation part, we build a model to predict the delay duration. Office of Pupil Transportation would be able to get the expected delay duration with this model and inform the parents who call.
+
+#3. Results
+##3.1 Description
 ### 3.1.1 Breakdown and Delay Distribution during the day 
 ```{r}
 #Delay count over time by boros
@@ -212,7 +213,7 @@ nyc_bus %>%
   labs(title = "Boxplot of delay duration for each company")
 ```
 
-####3.2.2.2 Reaction time of notifying of each company
+####3.2.1.2 Reaction time of notifying of each company
 ```{r}
 #reaction time of notifying of each company
 nyc_bus_reaction <- 
@@ -237,7 +238,7 @@ nyc_bus_reaction %>%
 
 Reaction time is the time period between inform time and occur time. We find that "FORTUNA BUS COMPANY" has the longest reaction time of three and a half hours, following are "R & C TRANSIT, INC.", "SMART PICK" and "PENNY TRANSPORTATION"(2 hours and 1 hour, respectively).
 
-#### 3.2.2.3 Work fault
+#### 3.2.1.3 Work fault
 ```{r}
 #inspect the cases that the occurred date and informed date are not the same
 nyc_bus_reaction %>%
