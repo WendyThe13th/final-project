@@ -317,7 +317,7 @@ We can see from the plot above that the route service for School-Age population 
 
 ## 3.3 Anticipation
 
-For this part, we'd like to fit a logistic model to find related variables that influence the delay time and further predict the delay time according to covariates we have. In order to fit a logistic regression, we first need to classify the dependent variable, which is delay time, as catrgorical variable. We define the length of delay time as "short","medium" and "long" according to 33 and 66 quantiles.
+For this part, we'd like to fit a logistic model to find related variables that influence the delay time and further predict the delay time according to covariates we have. In order to fit a logistic regression, we first need to classify the dependent variable, which is delay time, as catrgorical variable. We define the length of delay time as "short","medium" and "long" according to 33 and 66 quantiles. Moreover, since some companies only appear once or twice, we'd like to exclude them because it may only get into test dataset but not training dataset which result in error.
 
 ```{r}
 #make classification of delay time according to quantiles
@@ -333,6 +333,10 @@ nyc_bus_logit <-
   separate(occurred_on, into = c("occur_date", "occur_time", "occur_am_pm"), sep = " ") %>%
   mutate(occur_hour = hour(as.POSIXct(strptime(str_c(occur_time, occur_am_pm, sep = " "), "%I:%M:%S %p")))) %>%
   select(-c(occur_date, occur_time, occur_am_pm)) %>%
+  filter(company_name != "fortu",
+         company_name != "r & c",
+         company_name != "gvc",
+         ) %>% 
   na.omit()
 ```
 
@@ -365,21 +369,32 @@ test = map(1:10, ~rbind(delay_short[-train_short_row[[.]],],
 
 ```
 
+Finally we build the logistic model based on 9 variables. Since we have too many categorical variables, each has many different levels(especially company has over 50 levels), we cannot present statistical result neatly. But if you care the effect of specific variable, we can still find that in the model summary. In this analysis, we are more curious about the prediction effects. Therefore we construct a function to return the prediction result, which is actually a probability of successful prediction on test dataset. 
 ```{r}
 library(nnet)
-logit_reg <- multinom(delay_class ~ ., data = training)
-#step(logit_reg)
-#summary(logit_reg)
-test_pre <- 
-  as.tibble(predict(logit_reg, newdata = test, "probs")) %>%
-  mutate(predict_class = apply(., 1, which.is.max),
-         predict_class = recode(predict_class, "1" = "long", "2" = "medium", "3" = "short"))
-#accuracy
-bind_cols(test, test_pre) %>%
-  mutate(accuracy = if_else(predict_class == delay_class, 1, 0)) %>%
-  pull(accuracy) %>%
-  sum()/nrow(test)
+#The function which return a prediction probability for one logistic regression
+logistic_probs = function(i){
+  logit_reg <- multinom(delay_class ~ ., data = training[[i]])
+  #step(logit_reg)
+  #summary(logit_reg)
+  test_pre <- 
+    as.tibble(predict(logit_reg, newdata = test[[i]], "probs")) %>%
+    mutate(predict_class = apply(., 1, which.is.max),
+           predict_class = recode(predict_class, "1" = "long", "2" = "medium", "3" = "short"))
+  #accuracy
+  
+  pre = 
+    bind_cols(test[[i]], test_pre) %>%
+    mutate(accuracy = if_else(predict_class == delay_class, 1, 0)) %>%
+    pull(accuracy) %>%
+    sum()/nrow(test[[i]])
+  
+  tibble(i,pre)
+}
+#make the final tibble with results of prediction probability of 10 logistics regression
+map_df(1:10,~logistic_probs(.)) 
 ```
 
+From the result we can see the 
 # 4. Discussion
 
