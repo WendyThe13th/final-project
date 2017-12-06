@@ -250,6 +250,7 @@ nyc_bus_reaction %>%
   group_by(company_name) %>%
   summarise(mean_reaction = mean(reaction_time)) %>%
   arrange(desc(mean_reaction)) %>%
+  head(15) %>%
   knitr::kable()
 ```
 
@@ -264,6 +265,12 @@ nyc_bus_reaction %>%
   arrange(is_same_time) %>%
   head(20) %>%
   knitr::kable()
+
+```
+
+
+We define two kinds of situations as work faults: (1) the reaction time is negative, which could be caused by falsely recorded; (2)the reaction time is more than one day, which means the company failed to notify within the same day the delay or breakdown happened. There are 62 work faults in total, which is shown by the table above.
+```{r}
 work_fault_count <- 
   nyc_bus_reaction %>%
   select(company_name, occur_time, inform_time, reaction_time, is_same_time) %>%
@@ -280,6 +287,9 @@ left_join(work_fault_count, company_delay_count , by = "company_name") %>%
   arrange(desc(fault_percent)) %>%
   knitr::kable()
 ```
+
+Then we count the total number of work faults for each company and the percantage by dividing it with the total number of delay for each company. We can see from the table above that generally the ratio of work faults is quite small. The company "ic bu" has the largest ratio of work faults, followed by "grand" and "acme".
+
 
 ### 3.2.2 Comparison of route services
 There are two types of  route service, one is for school-age and the other is for Pre-K/EI population. These two busing types have very different contract terms. OPT does not perform route planning for Pre-K service and doesn't assign route numbers. For this part, we want to compare the differences of the two route services.
