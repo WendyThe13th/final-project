@@ -439,7 +439,7 @@ The predicted probability of each class of the first 10 observations is showed a
 
 ```{r}
 #make the final tibble with results of prediction accuracy of 10 logistics regression based on our 10 samples
-map_df(1:10,~logistic_probs(.)) %>% knitr::kable()
+map_df(1:10,~logistic_probs(.)) %>% rename(sample_id = i) %>% knitr::kable()
 ```
 
 The precidted accuracies of 10 samples we created is showed above. We can see the the prediction accuracy is around 62%. So the prediction accuracy of our logistics regression model is approximate **62%**. This accuracy is acceptable since it is obviously greater than 33.3% which is the expected accuracy without any information.
