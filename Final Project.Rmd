@@ -364,7 +364,7 @@ nyc_bus_logit <-
   select(-c(occur_date, occur_time, occur_am_pm)) %>%
   filter(company_name != "fortu",
          company_name != "r & c",
-         company_name != "gvc",
+         company_name != "gvc"
          ) %>% 
   na.omit()
 ```
@@ -372,7 +372,7 @@ nyc_bus_logit <-
 For further validation test, we create training and testing sample from original dataset as 7:3 that is proportional to different levels. We rerun this process 10 times, which will create 10 different training datasets for modeling.
 
 ```{r}
-#create training and testing sample from original dataset as 7:3 that is proportional to delay class
+#create training and testing samples from original dataset as 7:3 that is proportional to delay class
 delay_short <- nyc_bus_logit %>% 
   filter(delay_class == "short")
 
@@ -424,18 +424,27 @@ logistic_probs = function(i){
   tibble(i, accuracy)
 }
 
-#make the final tibble with results of prediction probability of 10 logistics regression
-map_df(1:10,~logistic_probs(.)) %>% knitr::kable()
-
-
+#we turn to the model based on the first training dataset
 nyc_bus_logit_model <- multinom(delay_class ~ ., data = training[[1]])
 #predict the class in the test dataset
 logit_test_pre <- 
   as.tibble(predict(nyc_bus_logit_model, newdata = test, "probs")) %>%
   mutate(predict_class = apply(., 1, which.is.max),
          predict_class = recode(predict_class, "1" = "long", "2" = "medium", "3" = "short"))
-#show predict result
+#show predict result(10 obseractions)
 logit_test_pre %>% head(10) %>%  knitr::kable()
+```
+
+The predicted probability of each class of the first 10 observations is showed above. Ad we make our final predicted class choosing the highest probability in our prediction. This result is the basic output of our logistics regression model prediction. In the following part, we will check the accuracy of our predicted model.
+
+```{r}
+#make the final tibble with results of prediction accuracy of 10 logistics regression based on our 10 samples
+map_df(1:10,~logistic_probs(.)) %>% knitr::kable()
+```
+
+The precidted accuracies of 10 samples we created is showed above. We can see the the prediction accuracy is around 62%. So the prediction accuracy of our logistics regression model is approximate **62%**. This accuracy is acceptable since it is obviously greater than 33.3% which is the expected accuracy without any information.
+
+```{r}
 #show the predict result graphically
 library(plotly)
 bind_cols(test[[1]], logit_test_pre) %>%
@@ -448,7 +457,7 @@ bind_cols(test[[1]], logit_test_pre) %>%
                       zaxis = list(title = 'probability of long')))
 ```
 
-From the result we can see the the prediction accuracy is around 62%. So the prediction accuracy of our logistics regression model is approximate 62%. In the interactive 3D scatter plot, we can see our predicted probability of three class in our test. That is, we can see the predicted probability of long delay, predicted probability of mediium delay, predicted probability of short delay of each observation in our test dataset.
+In the interactive 3D scatter plot, we can see our predicted probability of three class in our test. That is, we can see the predicted probability of long delay, predicted probability of mediium delay, predicted probability of short delay of each observation in our test dataset.
 
 # 4. Discussion
 In order to compare among different companies, our initial goal was to rank the quality of school bus service provided by different bus vendors. However, we cannot get the data of the total number of school buses each company is operating, so the rank becomes meaningless as we cannot know the risk of breakdown and delay for each company. Therefore, we analyze the distribution of delay duration of each company, the reaction time of notifying of each company, and the work faults instead. The result can be used to provide an overview of the operation condition of school bus serviced by different companies, and for those with long delay duration and long reaction time, reasonable planning of running route and improvement of reaction efficiency are needed.
