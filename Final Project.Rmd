@@ -317,7 +317,7 @@ nyc_bus_logit <-
   na.omit()
 ```
 
-For further validation test, we create training and testing sample from original dataset as 7:3 that is proportional to different levels.
+For further validation test, we create training and testing sample from original dataset as 7:3 that is proportional to different levels. We rerun this process 10 times, which will create 10 different training datasets for modeling.
 ```{r}
 #create training and testing sample from original dataset as 7:3 that is proportional to delay class
 delay_short <- nyc_bus_logit %>% 
@@ -331,23 +331,18 @@ delay_long = nyc_bus_logit %>%
 
 #produce random sample
 set.seed(2017)
-train_short_row <- sample(1:nrow(delay_short), 0.7*nrow(delay_short)) 
-train_medium_row <- sample(1:nrow(delay_medium), 0.7*nrow(delay_medium)) 
-train_long_row <- sample(1:nrow(delay_long), 0.7*nrow(delay_long)) 
+train_short_row = rerun(10,sample(1:nrow(delay_short), 0.7*nrow(delay_short)))
+train_medium_row = rerun(10,sample(1:nrow(delay_medium), 0.7*nrow(delay_medium)))
+train_long_row = rerun(10,sample(1:nrow(delay_long), 0.7*nrow(delay_long)))
 
+training = map(1:10, ~rbind(delay_short[train_short_row[[.]],],
+                   delay_medium[train_medium_row[[.]],],
+                   delay_long[train_long_row[[.]],]) )
 
+test = map(1:10, ~rbind(delay_short[-train_short_row[[.]],],
+                            delay_medium[-train_medium_row[[.]],],
+                            delay_long[-train_long_row[[.]],]) )
 
-training <-
-  rbind(delay_short[train_short_row,],
-        delay_medium[train_medium_row,],
-        delay_long[train_long_row,]) %>%
-  na.omit()
-
-test <-
-  rbind(delay_short[-train_short_row,],
-        delay_medium[-train_medium_row,],
-        delay_long[-train_long_row,]) %>%
-  filter(!is.na(reason))
 ```
 
 ```{r}
