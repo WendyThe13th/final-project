@@ -262,6 +262,7 @@ nyc_bus_reaction %>%
   select(occur_time, inform_time, reaction_time, is_same_time) %>%
   filter(is_same_time != 0) %>%
   arrange(is_same_time) %>%
+  head(20) %>%
   knitr::kable()
 ```
 
@@ -386,16 +387,34 @@ logistic_probs = function(i){
            predict_class = recode(predict_class, "1" = "long", "2" = "medium", "3" = "short"))
   #accuracy
   
-  pre = 
+  accuracy = 
     bind_cols(test[[i]], test_pre) %>%
     mutate(accuracy = if_else(predict_class == delay_class, 1, 0)) %>%
     pull(accuracy) %>%
     sum()/nrow(test[[i]])
   
-  tibble(i,pre)
+  tibble(i, accuracy)
 }
 #make the final tibble with results of prediction probability of 10 logistics regression
 map_df(1:10,~logistic_probs(.)) 
+
+
+nyc_bus_logit_model <- multinom(delay_class ~ ., data = training[[1]])
+#predict the class in the test dataset
+logit_test_pre <- 
+  as.tibble(predict(nyc_bus_logit_model, newdata = test, "probs")) %>%
+  mutate(predict_class = apply(., 1, which.is.max),
+         predict_class = recode(predict_class, "1" = "long", "2" = "medium", "3" = "short"))
+#show the predict result graphically
+library(plotly)
+bind_cols(test[[1]], logit_test_pre) %>%
+  select(long, medium, short, predict_class, delay_class) %>%
+  plot_ly(x = ~short, y = ~medium, z = ~long, alpha = 0.75, 
+          color = ~delay_class, marker = list(size = 3), colors = c('brown', 'orchid4', 'seagreen')) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = 'probability of short'),
+                      yaxis = list(title = 'probability of medium'),
+                      zaxis = list(title = 'probability of long')))
 ```
 
 From the result we can see the 
