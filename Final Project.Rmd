@@ -298,6 +298,8 @@ We can see from the plot above that the route service for School-Age population 
 
 ## 3.3 Anticipation
 
+For this part, we'd like to fit a logistic model to find related variables that influence the delay time and further predict the delay time according to covariates we have. In order to fit a logistic regression, we first need to classify the dependent variable, which is delay time, as catrgorical variable. We define the length of delay time as "short","medium" and "long" according to 33 and 66 quantiles.
+
 ```{r}
 #make classification of delay time according to quantiles
 cutoff <- quantile(nyc_bus$how_long_delayed, c(0.33,0.67), na.rm = TRUE)
@@ -315,6 +317,7 @@ nyc_bus_logit <-
   na.omit()
 ```
 
+For further validation test, we create training and testing sample from original dataset as 7:3 that is proportional to different levels.
 ```{r}
 #create training and testing sample from original dataset as 7:3 that is proportional to delay class
 delay_short <- nyc_bus_logit %>% 
