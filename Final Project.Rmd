@@ -32,13 +32,13 @@ library(forcats)
 ```
 
 #1. Introduction
-For many students, school bus is the only available method of transportation to and from school. Students without access to a school bus have a much harder time getting to school on time every day. And they are also much safer than passenger vehicles for students. As shown that students are about 50 times more likely to arrive at school alive if they take the bus than if they drive themselves or ride with friends-more than 20 times safer than if they ride with a parent or other adult. Improving the operation condition and safety of school bus has always been an important topic. So we are interested in exploring the operation status of NYC school bus, and predicting the delay duration for school bus.
+For many students, school bus is the only available method of transportation to and from school. Students without access to a school bus have a much harder time getting to school on time every day. And they are also much safer than passenger vehicles for students. As shown that students are about 50 times more likely to arrive at school alive if they take the bus than if they drive themselves or ride with friends-more than 20 times safer than if they ride with a parent or other adult. Improving the operation condition and safety of school bus has always been an important topic. So we are interested in exploring the operation status of NYC school bus, and predicting the delay duration.
 
 
 The Office of Pupil Transportation(OPT) administers school bus service to New York City schools for students attending both public and non-public schools, and it aims to use the Bus Breakdown and Delay system to inform parents who call with questions regarding bus service. The Bus Breakdown and Delay system collects information from school bus vendors operating out in the field in real time about the occur and inform time, delay duration, breakdown and delay reasons, and other operation information.
 
 
-Our initial goal of our project was to find out the operation status of NYC school bus, and to investigate and rank the quality of school bus service provided by different bus vendors. However, it follows a question that we cannot get the data of the total number of school buses each company is operating, so the rank becomes meaningless as we cannot know the risk of breakdown and delay for each company. After further exploring the data, we decide to focus our project on exploratory analyses and anticipation. Within the exploratory analysis, we compare different school bus companies by delay duration, reaction time and work fault.We also compare route services by the odds of notifying and the effect of route planning. Within the anticipation part, we build a model to predict the delay duration. Office of Pupil Transportation would be able to get the expected delay duration with this model and inform the parents who call.
+The initial goal of our project was to find out the operation status of NYC school bus, and to investigate and rank the quality of school bus service provided by different bus vendors. However, it follows a question that we cannot get the data of the total number of school buses each company is operating, so the rank becomes meaningless as we cannot know the risk of breakdown and delay for each company. After further exploring the data, we decide to focus our project on exploratory analyses and anticipation. Within the exploratory analysis, we compare different school bus companies by delay duration, reaction time and work fault.We also compare route services by the odds of notifying and the effect of route planning. Within the anticipation part, we build a model to predict the delay duration. Office of Pupil Transportation would be able to get the expected delay duration with this model and inform the parents who call.
 
 
 
@@ -47,7 +47,6 @@ Data consist of breakdown and delay information of schoolbus in New York during 
 
 
 We did three main clean steps to prepare data for analysis. The first was to organize the data of delay duration into minutes. As the delay duration was recorded by hand, the data was very unformatted. So we map each form with the corresponding numeric time in minutes. The second step was to clean up company names by extracting common words as the original company name was too long and unformatted. The third step was to format the date and datetime as the oringinal data was unformatted and the class of the data was character.
-
 
 
 ```{r}
@@ -250,26 +249,27 @@ nyc_bus_reaction %>%
   group_by(company_name) %>%
   summarise(mean_reaction = mean(reaction_time)) %>%
   arrange(desc(mean_reaction)) %>%
-  head(15) %>%
-  knitr::kable()
+  head(10) %>%
+  knitr::kable() 
 ```
 
 Reaction time is the time period between inform time and occur time. We find that "FORTUNA BUS COMPANY" has the longest reaction time of three and a half hours, following are "R & C TRANSIT, INC.", "SMART PICK" and "PENNY TRANSPORTATION"(2 hours and 1 hour, respectively).
 
 #### 3.2.1.3 Work fault
+We define two kinds of situations as work faults: (1) the reaction time is negative, which could be caused by falsely recorded; (2)the reaction time is more than one day, which means the company failed to notify within the same day the delay or breakdown happened. There are 62 work faults in total, which is shown by the table below.
+
 ```{r}
 #inspect the cases that the occurred date and informed date are not the same
 nyc_bus_reaction %>%
   select(company_name, occur_time, inform_time, reaction_time, is_same_time) %>%
   filter(is_same_time != 0) %>%
   arrange(is_same_time) %>%
-  head(20) %>%
+  head(10) %>%
   knitr::kable()
-
 ```
 
+Then we count the total number of work faults for each company and the percantage by dividing it with the total number of delay for each company. 
 
-We define two kinds of situations as work faults: (1) the reaction time is negative, which could be caused by falsely recorded; (2)the reaction time is more than one day, which means the company failed to notify within the same day the delay or breakdown happened. There are 62 work faults in total, which is shown by the table above.
 ```{r}
 work_fault_count <- 
   nyc_bus_reaction %>%
@@ -285,11 +285,11 @@ company_delay_count <-
 left_join(work_fault_count, company_delay_count , by = "company_name") %>%
   mutate(fault_percent = num_work_fault/num_delay_company) %>%
   arrange(desc(fault_percent)) %>%
+  head(10) %>%
   knitr::kable()
 ```
 
-Then we count the total number of work faults for each company and the percantage by dividing it with the total number of delay for each company. We can see from the table above that generally the ratio of work faults is quite small. The company "ic bu" has the largest ratio of work faults, followed by "grand" and "acme".
-
+We can see from the table above that generally the ratio of work faults is quite small. The company "IC BUS INC. " has the largest ratio of work faults, followed by "GRANDPA`S BUS CO., INC." and "ACME BUS CORP. ".
 
 ### 3.2.2 Comparison of route services
 There are two types of  route service, one is for school-age and the other is for Pre-K/EI population. These two busing types have very different contract terms. OPT does not perform route planning for Pre-K service and doesn't assign route numbers. For this part, we want to compare the differences of the two route services.
@@ -333,7 +333,7 @@ Then we can see from the table that heavy traffic has the longest cumulative del
 #Effect of route planning 
 nyc_bus %>%
   filter(breakdown_or_running_late == "Running Late") %>%
-  ggplot(aes(x = school_age_or_prek, y = how_long_delayed)) +
+  ggplot(aes(x = school_age_or_prek, y = how_long_delayed, fill = school_age_or_prek)) +
   geom_boxplot() +
   ggtitle("Effect of route planning") +
   labs(x = "Route servive", y = "Delay duration because of running late") +
@@ -448,7 +448,7 @@ bind_cols(test[[1]], logit_test_pre) %>%
 From the result we can see the the prediction accuracy is around 62%. So the prediction accuracy of our logistics regression model is approximate 62%. In the interactive 3D scatter plot, we can see our predicted probability of three class in our test. That is, we can see the predicted probability of long delay, predicted probability of mediium delay, predicted probability of short delay of each observation in our test dataset.
 
 # 4. Discussion
-In order to compare among different companies, our initial goal was to rank the quality of school bus service provided by different bus vendors. However, we cannot get the data of the total number of school buses each company is operating, so the rank becomes meaningless as we cannot know the risk of breakdown and delay for each company. Therefore, we analyze the distribution of delay duration of each company and the reaction time of notifying of each company instead. The result can be used to provide an overview of the operation condition of school bus serviced by different companies, and for those with long delay duration and long reaction time, reasonable planning of running route and improvement of reaction efficiency are needed.
+In order to compare among different companies, our initial goal was to rank the quality of school bus service provided by different bus vendors. However, we cannot get the data of the total number of school buses each company is operating, so the rank becomes meaningless as we cannot know the risk of breakdown and delay for each company. Therefore, we analyze the distribution of delay duration of each company, the reaction time of notifying of each company, and the work faults instead. The result can be used to provide an overview of the operation condition of school bus serviced by different companies, and for those with long delay duration and long reaction time, reasonable planning of running route and improvement of reaction efficiency are needed.
 
 Secondly, for the route services, we compared the odds of notifying of two route services and the effect of route planning. Our result shows that Pre-K has a much higher odds of notifying and a shorter average delay duration, as well as more high delay duration outliers. Since we already know that the route planning for Pre-K is not assigned and fixed by OPT, which indicates the flexibility of operation. The result shows that route planning has a negative effect on the school bus arriving in time, and can be used to suggest OPT assign the routes for School-Age more flexible.
 
