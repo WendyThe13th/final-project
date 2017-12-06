@@ -34,8 +34,14 @@ library(forcats)
 #1. Introduction
 The Office of Pupil Transportation(OPT) administers school bus service to New York City schools for students attending both public and non-public schools, and it aims to use the Bus Breakdown and Delay system to inform parents who call with questions regarding bus service. The Bus Breakdown and Delay system collects information from school bus vendors operating out in the field in real time about the occur and inform time, delay duration, breakdown and delay reasons, and other operation information.
 
+Our initial goal of our project was to find out the operation status of NYC school bus, and to investigate and rank the quality of school bus service provided by different bus vendors. However, it follows a question that we cannot get the data of the total number of school buses each company is operating, so the rank becomes meaningless as we cannot know the risk of breakdown and delay for each company. After further exploring the data, we decide to focus our project on exploratory analyses and anticipation. Within the exploratory analysis, we compare different school bus companies by delay duration, reaction time and work fault.We also compare route services by the odds of notifying and the effect of route planning. Within the anticipation part, we build a model to predict the delay duration. Office of Pupil Transportation would be able to get the expected delay duration with this model and inform the parents who call.
+
+
 #2. Data and methods
-Data consist of breakdown and delay information of schoolbus in New York during 2015-2016, 2016-2017 and 2017-2018 school years (except July, August and September), including occur time, inform time, delay duration, reason, bus company that provided service, run type, route and boro about breakdown and delay. These real time updated data are stored in Bus_Breakdown_and_Delays.csv. To prepare these data for analysis, we import, unity delay duration into minutes, and clear up company names by extracting common words.
+Data consist of breakdown and delay information of schoolbus in New York during 2015-2016, 2016-2017 and 2017-2018 school years (except July, August and September), including occur time, inform time, delay duration, reason, bus company that provided service, run type, route and boro about breakdown and delay. These real time updated data are stored in Bus_Breakdown_and_Delays.csv.
+
+We did three main clean steps to prepare data for analysis. The first was to organize the data of delay duration into minutes. As the delay duration was recorded by hand, the data was very unformatted. So we map each form with the corresponding numeric time in minutes. The second step was to clean up company names by extracting common words as the original company name was too long and unformatted. The third step was to format the date and datetime as the oringinal data was unformatted and the class of the data was character.
+
 
 
 ```{r}
