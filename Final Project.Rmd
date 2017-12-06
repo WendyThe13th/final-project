@@ -259,10 +259,25 @@ Reaction time is the time period between inform time and occur time. We find tha
 ```{r}
 #inspect the cases that the occurred date and informed date are not the same
 nyc_bus_reaction %>%
-  select(occur_time, inform_time, reaction_time, is_same_time) %>%
+  select(company_name, occur_time, inform_time, reaction_time, is_same_time) %>%
   filter(is_same_time != 0) %>%
   arrange(is_same_time) %>%
   head(20) %>%
+  knitr::kable()
+work_fault_count <- 
+  nyc_bus_reaction %>%
+  select(company_name, occur_time, inform_time, reaction_time, is_same_time) %>%
+  filter(is_same_time != 0) %>%
+  group_by(company_name) %>%
+  summarise(num_work_fault = n()) %>%
+  arrange(desc(num_work_fault))
+company_delay_count <-
+  nyc_bus_reaction %>%
+  count(company_name) %>%
+  rename(num_delay_company = n)
+left_join(work_fault_count, company_delay_count , by = "company_name") %>%
+  mutate(fault_percent = num_work_fault/num_delay_company) %>%
+  arrange(desc(fault_percent)) %>%
   knitr::kable()
 ```
 
@@ -373,7 +388,10 @@ test = map(1:10, ~rbind(delay_short[-train_short_row[[.]],],
 
 ```
 
-Finally we build the logistic model based on 9 variables. Since we have too many categorical variables, each has many different levels(especially company has over 50 levels), we cannot present statistical result neatly. But if you care the effect of specific variable, we can still find that in the model summary. In this analysis, we are more curious about the prediction effects. Therefore we construct a function to return the prediction result, which is actually a probability of successful prediction on test dataset. 
+Finally we build the logistic model based on 9 variables. The basic formula for a binary outcome logistics regression model is $ln(\frac{P}{1-P})=\beta_0+\sum_{i=1}^{p-1}\beta_iX_i$ where $P$ is the probability that $Y=1$. In our cases, we are doing a multi-classification problem, which means that the outcome is not a binary one. But logistics regression model can still use "one versus other" method to solve this problem.
+
+Since we have too many categorical variables, each has many different levels(especially company has over 50 levels), we cannot present statistical result neatly. But if you care the effect of specific variable, we can still find that in the model summary. In this analysis, we are more curious about the prediction effects. Therefore we construct a function to return the prediction result, which is actually a probability of successful prediction on test dataset. 
+
 ```{r}
 library(nnet)
 #The function which return a prediction probability for one logistic regression
@@ -417,7 +435,7 @@ bind_cols(test[[1]], logit_test_pre) %>%
                       zaxis = list(title = 'probability of long')))
 ```
 
-From the result we can see the 
+From the result we can see the the prediction accuracy is around 62%. So the prediction accuracy of our logistics regression model is approximate 62%. In the interactive 3D scatter plot, we can see our predicted probability of three class in our test. That is, we can see the predicted probability of long delay, predicted probability of mediium delay, predicted probability of short delay of each observation in our test dataset.
 
 # 4. Discussion
 In order to compare among different companies, our initial goal was to rank the quality of school bus service provided by different bus vendors. However, we cannot get the data of the total number of school buses each company is operating, so the rank becomes meaningless as we cannot know the risk of breakdown and delay for each company. Therefore, we analyze the distribution of delay duration of each company and the reaction time of notifying of each company instead. The result can be used to provide an overview of the operation condition of school bus serviced by different companies, and for those with long delay duration and long reaction time, reasonable planning of running route and improvement of reaction efficiency are needed.
