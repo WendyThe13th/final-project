@@ -111,6 +111,8 @@ nyc_bus <-
 
 #3. Results
 ##3.1 Description
+For this part, we want to find out some basic description of the variables we are interested in, including breakdown and delay distribution during the day, main reasons for school bus breakdowns and delays and average delay duration by reason.
+
 ### 3.1.1 Breakdown and Delay Distribution during the day 
 ```{r}
 #Delay count over time by boros
@@ -132,6 +134,7 @@ nyc_bus %>%
 We found that during the day, the school bus delay occurs mainly focucs on 7:00-8:00am and 2:00-3:00pm, which are the commonsensible rush hours. The delay happens most frequently in Brooklyn and Bronx, and happens least frequently in Staten Island and Westchester, indicating the traffic condition of these boros.
 
 ###3.1.2 Reasons of breakdown and delay
+We want to find out the main reasons for school bus breakdowns and delays.
 ```{r reason_breakdown}
 # Main reasons for school bus breakdowns and delays
 reason_count_break = nyc_bus %>%
@@ -196,6 +199,8 @@ We can see the average delay duration by different reasons from the plot. Accide
 
 ## 3.2 Exploratory Analysis
 ### 3.2.1 Comparison of different companies
+For this part, we want to make comparisons among different companies in terms of delay duration, reaction time of notifying and work fault of notifying.
+
 #### 3.2.1.1 Distribution of delay duration of each company
 ```{r}
 #distribution of delay duration for each company
@@ -241,7 +246,8 @@ nyc_bus_reaction %>%
   filter(is_same_time == 0) %>%
   group_by(company_name) %>%
   summarise(mean_reaction = mean(reaction_time)) %>%
-  arrange(desc(mean_reaction))
+  arrange(desc(mean_reaction)) %>%
+  knitr::kable()
 ```
 
 Reaction time is the time period between inform time and occur time. We find that "FORTUNA BUS COMPANY" has the longest reaction time of three and a half hours, following are "R & C TRANSIT, INC.", "SMART PICK" and "PENNY TRANSPORTATION"(2 hours and 1 hour, respectively).
@@ -252,10 +258,13 @@ Reaction time is the time period between inform time and occur time. We find tha
 nyc_bus_reaction %>%
   select(occur_time, inform_time, reaction_time, is_same_time) %>%
   filter(is_same_time != 0) %>%
-  arrange(is_same_time)
+  arrange(is_same_time) %>%
+  knitr::kable()
 ```
 
 ### 3.2.2 Comparison of route services
+There are two types of  route service, one is for school-age and the other is for Pre-K/EI population. These two busing types have very different contract terms. OPT does not perform route planning for Pre-K service and doesn't assign route numbers. For this part, we want to compare the differences of the two route services.
+
 #### 3.2.2.1 Odds of notifying differed by route services
 ```{r}
   nyc_bus %>% 
@@ -267,10 +276,14 @@ nyc_bus_reaction %>%
   group_by(school_age_or_prek,notify) %>% 
   summarise(count = sum(n)) %>% 
   spread(notify,count) %>% 
-  mutate(odds = both/not_both) 
+  mutate(odds = both/not_both) %>%
+  knitr::kable()
 ```
 
+We can see from the table that the odds of notifying is 13.58 and 2.32 for Pre-K and School-Age, respectively. The route service for Pre-K has a much higher odds of notifying.
+
 ####3.2.2.2 Effect of route planning
+We want to find out whether different service type (having route planned by OPT or not) is associated with the time of delay.
 
 It is a funny thing that while heavy traffic is NO.1 reason for delay, its average delay duartion is quite short. Then we are interested in which reason has the longest cumulative delay reason.
 ```{r}
@@ -286,8 +299,6 @@ nyc_bus %>%
 ```
 
 Then we can see from the table that heavy traffic has the longest cumulative delay duration. 
-
-There are two types of  route service, one is for school-age and the other is for Pre-K/EI population. These two busing types have very different contract terms. OPT does not perform route planning for Pre-K service and doesn't assign route numbers. We want to find out whether different service type (having route planned by OPT or not) is associated with the time of delay.
 
 ```{r}
 #Effect of route planning 
@@ -326,6 +337,7 @@ nyc_bus_logit <-
 ```
 
 For further validation test, we create training and testing sample from original dataset as 7:3 that is proportional to different levels. We rerun this process 10 times, which will create 10 different training datasets for modeling.
+
 ```{r}
 #create training and testing sample from original dataset as 7:3 that is proportional to delay class
 delay_short <- nyc_bus_logit %>% 
@@ -370,6 +382,4 @@ bind_cols(test, test_pre) %>%
 ```
 
 # 4. Discussion
-
-
 
